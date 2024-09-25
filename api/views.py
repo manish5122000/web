@@ -33,6 +33,9 @@ def create_connection(request):
         user1 = body.get('user1')
         user2 = body.get('user2')
 
+        if not user1 or not user2:
+            return JsonResponse({'status': 'error', 'message': 'Both user1 and user2 must be provided.'})
+
         try:
             user1_instance = User.objects.get(username__iexact=user1)
             user2_instance = User.objects.get(username__iexact=user2)
@@ -48,7 +51,6 @@ def create_connection(request):
             return JsonResponse({'status': 'error', 'message': 'One or both users do not exist.'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
-
 
 @csrf_exempt
 def mark_message_read(request):

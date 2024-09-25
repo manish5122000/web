@@ -11,8 +11,29 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class SimpleChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        print("hello-----------")
+        # Accept the WebSocket connection
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Disconnect handling (optional)
+        pass
+
+    async def receive(self, text_data):
+        # Handle incoming messages
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+
+        # Send message back
+        await self.send(text_data=json.dumps({
+            'message': message
+        }))
+
+
 class ChatConsumer(AsyncWebsocketConsumer):
-    active_users = set() 
+    active_users = set()
 
     async def connect(self):
         self.user1 = self.scope['url_route']['kwargs']['user1']
@@ -44,6 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
         logger.info(f"User {self.user1_instance.username} connected to chat room {self.room_name}.")
+
 
     async def disconnect(self, close_code):
         self.active_users.discard(self.user1_instance.username)
