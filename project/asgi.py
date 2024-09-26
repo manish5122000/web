@@ -64,8 +64,8 @@ application = ProtocolTypeRouter({
     "websocket": 
         # AuthMiddlewareStack(
             URLRouter([
-                path('ws/chat/', SimpleChatConsumer.as_asgi()),
-                re_path(r'ws/chat/(?P<user1>\w+)/(?P<user2>\w+)/$', ChatConsumer.as_asgi(), name='ws_chat'),
+                # path('ws/chat/', SimpleChatConsumer.as_asgi()),
+                re_path(r'ws/chat/(?P<room_name>\w+)/$', ChatConsumer.as_asgi()),
 
             ])
         # )

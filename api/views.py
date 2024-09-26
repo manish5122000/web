@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
@@ -81,23 +82,33 @@ def send_message(request):
         message_text = request.POST.get('message')
 
         try:
+            # Fetch sender and receiver users
             sender = User.objects.get(username=sender_username)
-            receiver = User.objects.get(username=receiver_username)
+        except User.DoesNotExist:
+            logger.error(f"Sender {sender_username} does not exist.")
+            return JsonResponse({'status': 'error', 'message': f'Sender {sender_username} does not exist.'})
 
+        try:
+            receiver = User.objects.get(username=receiver_username)
+        except User.DoesNotExist:
+            logger.error(f"Receiver {receiver_username} does not exist.")
+            return JsonResponse({'status': 'error', 'message': f'Receiver {receiver_username} does not exist.'})
+
+        try:
+            # Get or create the chat room
             room, created = ChatRoom.objects.get_or_create(name=room_name)
 
-            message_content = {
-                "roomname": room_name,
-                "from": sender.username,
-                "to": receiver.username,
-                "message": message_text,
-                "timestamp": timezone.now(), 
-                "is_read": False,
-                "is_delivered": True,
-            }
+            # Save message in the database
+            message = Message.objects.create(
+                room=room,
+                sender=sender,
+                recipient=receiver,
+                content=message_text,
+                is_read=False,
+                is_delivered=True
+            )
 
-            message = Message.objects.create(content=message_content)
-
+            # Send a JSON response with message details
             return JsonResponse({
                 'status': 'success',
                 'message': {
@@ -106,9 +117,10 @@ def send_message(request):
                     'timestamp': message.timestamp,
                 }
             })
-        except User.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'One or both users do not exist.'})
-
+        except Exception as e:
+            logger.error(f"Error saving message: {e}")
+            return JsonResponse({'status': 'error', 'message': 'Error occurred while saving the message.'})
+    
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
 @csrf_exempt

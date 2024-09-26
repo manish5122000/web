@@ -14,11 +14,13 @@ class ChatRoom(models.Model):
         return [self.user1.username, self.user2.username]
 
 class Message(models.Model):
+    roomname = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=True)
     content = JSONField()  
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Message from {self.content['from']} to {self.content['to']} in {self.content['roomname']}"
+
 
 class TypingIndicator(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
